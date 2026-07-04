@@ -1,0 +1,62 @@
+package webhooks
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+)
+
+const QueueKey = "webhooks:incoming"
+
+// Job is the payload enqueued for asynchronous webhook processing.
+type Job struct {
+	ID        string            `json:"id"`
+	Source    string            `json:"source"`
+	Event     string            `json:"event"`
+	Payload   json.RawMessage   `json:"payload"`
+	Headers   map[string]string `json:"headers,omitempty"`
+	Received  time.Time         `json:"received_at"`
+}
+
+// Enqueuer pushes webhook jobs onto Redis.
+type Enqueuer interface {
+	Enqueue(ctx context.Context, job Job) error
+}
+
+// Processor handles a dequeued webhook job.
+type Processor struct {
+	verify func(source string, payload []byte, signature string) error
+}
+
+func NewProcessor(verify func(source string, payload []byte, signature string) error) *Processor {
+	return &Processor{verify: verify}
+}
+
+func (p *Processor) Handle(ctx context.Context, job Job) error {
+	if job.ID == "" {
+		return fmt.Errorf("job id is required")
+	}
+	if job.Source == "" {
+		return fmt.Errorf("job source is required")
+	}
+
+	sig := ""
+	if job.Headers != nil {
+		sig = job.Headers["X-Webhook-Signature"]
+	}
+
+	if p.verify != nil {
+		if err := p.verify(job.Source, job.Payload, sig); err != nil {
+			return fmt.Errorf("verify webhook: %w", err)
+		}
+	}
+
+	// Domain handlers (payments, CRM sync, etc.) plug in here per source/event.
+	switch job.Event {
+	case "ping":
+		return nil
+	default:
+		return nil
+	}
+}
