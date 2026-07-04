@@ -15,6 +15,7 @@ import (
 
 	"github.com/koro/koro-go-services/internal/auth"
 	"github.com/koro/koro-go-services/internal/config"
+	"github.com/koro/koro-go-services/internal/portal"
 	"github.com/koro/koro-go-services/internal/webhooks"
 )
 
@@ -59,7 +60,8 @@ func main() {
 
 	tokens := auth.NewTokenService(env.JWTSecret, time.Hour)
 	queue := webhooks.NewRedisQueue(rdb, webhooks.QueueKey)
-	webhookHandler := webhooks.NewHandler(queue)
+	webhookHandler := webhooks.NewHandler(queue, settings)
+	portalHandlers := portal.NewHandlers(settings, tokens)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler(pool, rdb))
@@ -69,6 +71,11 @@ func main() {
 		source := r.PathValue("source")
 		webhookHandler.Receive(source)(w, r)
 	})
+
+	mux.HandleFunc("POST /api/auth/login", portalHandlers.Login)
+	mux.HandleFunc("POST /api/auth/logout", portalHandlers.Logout)
+	mux.Handle("GET /api/auth/me", auth.Middleware(tokens)(http.HandlerFunc(portalHandlers.Me)))
+	mux.Handle("GET /api/dashboard/overview", auth.Middleware(tokens)(http.HandlerFunc(portalHandlers.DashboardOverview)))
 
 	server := &http.Server{
 		Addr:         env.HTTPAddr,

@@ -10,11 +10,15 @@ import (
 )
 
 type Handler struct {
-	queue Enqueuer
+	queue    Enqueuer
+	settings func(key string) (string, bool)
 }
 
-func NewHandler(queue Enqueuer) *Handler {
-	return &Handler{queue: queue}
+func NewHandler(queue Enqueuer, settings interface{ Get(string) (string, bool) }) *Handler {
+	return &Handler{
+		queue: queue,
+		settings: settings.Get,
+	}
 }
 
 func (h *Handler) Receive(source string) http.HandlerFunc {
@@ -22,6 +26,13 @@ func (h *Handler) Receive(source string) http.HandlerFunc {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
+		}
+
+		if h.settings != nil {
+			if enabled, ok := h.settings("feature.webhooks.enabled"); ok && enabled == "false" {
+				http.Error(w, "webhooks disabled", http.StatusServiceUnavailable)
+				return
+			}
 		}
 
 		body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))

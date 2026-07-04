@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 )
 
@@ -52,11 +53,22 @@ func (p *Processor) Handle(ctx context.Context, job Job) error {
 		}
 	}
 
-	// Domain handlers (payments, CRM sync, etc.) plug in here per source/event.
 	switch job.Event {
 	case "ping":
+		slog.Info("webhook.ping", "source", job.Source, "job_id", job.ID)
+		return nil
+	case "payment.succeeded", "checkout.session.completed":
+		var payload map[string]any
+		if err := json.Unmarshal(job.Payload, &payload); err != nil {
+			return fmt.Errorf("decode payment payload: %w", err)
+		}
+		slog.Info("webhook.payment", "source", job.Source, "event", job.Event, "job_id", job.ID)
+		return nil
+	case "order.created":
+		slog.Info("webhook.order", "source", job.Source, "job_id", job.ID)
 		return nil
 	default:
+		slog.Info("webhook.received", "source", job.Source, "event", job.Event, "job_id", job.ID)
 		return nil
 	}
 }

@@ -101,3 +101,10 @@ func (s *Store) MustGet(key string) string {
 	}
 	return v
 }
+
+func (s *Store) GetDefault(key, fallback string) string {
+	if v, ok := s.Get(key); ok && v != "" {
+		return v
+	}
+	return fallback
+}
