@@ -83,7 +83,7 @@ psql "$DATABASE_URL" -f migrations/001_initial.sql
 
 ## Configuration model
 
-Infrastructure connection strings and the JWT signing key live in `.env` (see `.env.example`). Stripe keys, webhook secrets, and feature flags live in the `app_settings` table and are refreshed every 30 seconds. See [docs/architecture.md](docs/architecture.md) and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Infrastructure goes in `.env`. Stripe keys and webhook secrets live in `app_settings` (Postgres), refreshed every 30s.
 
 ## Makefile targets
 
@@ -95,20 +95,6 @@ Infrastructure connection strings and the JWT signing key live in `.env` (see `.
 | `make docker-up` | Start full stack |
 | `make docker-down` | Tear down stack |
 
-## Documentation
-
-| Doc | Contents |
-|-----|----------|
-| [docs/architecture.md](docs/architecture.md) | Package layout, config model, webhook pipeline |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Docker, production deploy, JWT, worker, settings cache |
-
-## Branching
-
-- `main` — stable releases
-- `dev` — integration branch
-
-Use [Conventional Commits](https://www.conventionalcommits.org/) for all changes.
-
 ## Live demo
 
-**URL:** _Pending deployment_ — [GitHub](https://github.com/koro-manoj/koro-go-services)
+Pending deployment.
