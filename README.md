@@ -101,3 +101,7 @@ Infrastructure connection strings and the JWT signing key live in `.env` (see `.
 - `dev` — integration branch
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) for all changes.
+
+## Live demo
+
+**URL:** _Pending deployment_ — [GitHub](https://github.com/koro-manoj/koro-go-services)
