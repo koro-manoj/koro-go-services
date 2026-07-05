@@ -66,6 +66,25 @@ curl -s -X POST http://localhost:8080/webhooks/stripe \
 
 Worker logs show processing output in `docker compose logs -f worker`.
 
+### Portal API (koro-web-apps live mode)
+
+Demo credentials are seeded via `migrations/002_portal_demo.sql` (`demo@koro.io` / `password`).
+
+```bash
+curl -s -X POST http://localhost:8080/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"demo@koro.io","password":"password"}' | jq
+
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"demo@koro.io","password":"password"}' | jq -r '.data.token')
+
+curl -s http://localhost:8080/api/auth/me -H "Authorization: Bearer $TOKEN" | jq
+curl -s http://localhost:8080/api/dashboard/overview -H "Authorization: Bearer $TOKEN" | jq
+```
+
+Set `NEXT_PUBLIC_API_URL=http://localhost:8080` and `NEXT_PUBLIC_USE_MOCK_API=false` in the portal app to use live mode.
+
 ## Local development (without Docker)
 
 ```bash

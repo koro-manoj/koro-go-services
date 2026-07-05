@@ -35,6 +35,19 @@ func NewStore(pool *pgxpool.Pool) *Store {
 	}
 }
 
+// NewMemoryStore builds an in-memory settings store (tests and local defaults).
+func NewMemoryStore(values map[string]string) *Store {
+	cache := make(map[string]string, len(values))
+	for key, value := range values {
+		cache[key] = value
+	}
+
+	return &Store{
+		cache:    cache,
+		interval: defaultRefreshInterval,
+	}
+}
+
 func (s *Store) Start(ctx context.Context) error {
 	if err := s.refresh(ctx); err != nil {
 		return err
